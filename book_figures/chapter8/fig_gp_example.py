@@ -22,7 +22,8 @@ from __future__ import print_function, division
 
 import numpy as np
 from matplotlib import pyplot as plt
-from sklearn.gaussian_process import GaussianProcess
+from sklearn.gaussian_process import GaussianProcessRegressor, kernels
+from scipy.optimize import fmin_cobyla
 
 #----------------------------------------------------------------------
 # This function adjusts matplotlib settings for a uniform feel in the textbook.
@@ -53,24 +54,23 @@ draws = np.random.multivariate_normal(mu, C, 3)
 # Constrain the mean and covariance with two points
 x1 = np.array([2.5, 7])
 y1 = np.cos(x1)
-gp1 = GaussianProcess(corr='squared_exponential', theta0=0.5,
-                      random_state=0)
+kernel1 = kernels.RBF(1/0.5, (1/0.5, 1/0.5))
+gp1 = GaussianProcessRegressor(kernel=kernel1, random_state=0, normalize_y=True)
 gp1.fit(x1[:, None], y1)
-f1, MSE1 = gp1.predict(x[:, None], eval_MSE=True)
-f1_err = np.sqrt(MSE1)
+f1, f1_err = gp1.predict(x[:, None], return_std=True)
 
 #------------------------------------------------------------
 # Constrain the mean and covariance with two noisy points
 #  scikit-learn gaussian process uses nomenclature from the geophysics
-#  community, where a "nugget" can be specified.  The diagonal of the
-#  assumed covariance matrix is multiplied by the nugget.  This is
-#  how the error on inputs is incorporated into the calculation
+#  community, where a "nugget (alpha parameter)" can be specified.
+#  The diagonal of the assumed covariance matrix is multiplied by the nugget.
+#  This is how the error on inputs is incorporated into the calculation.
 dy2 = 0.2
-gp2 = GaussianProcess(corr='squared_exponential', theta0=0.5,
-                      nugget=(dy2 / y1) ** 2, random_state=0)
+kernel2 = kernels.RBF(1/0.5, (1/0.5, 1/0.5))
+gp2 = GaussianProcessRegressor(kernel=kernel2,
+                               alpha=(dy2 / y1) ** 2, random_state=0)
 gp2.fit(x1[:, None], y1)
-f2, MSE2 = gp2.predict(x[:, None], eval_MSE=True)
-f2_err = np.sqrt(MSE2)
+f2, f2_err = gp2.predict(x[:, None], return_std=True)
 
 
 #------------------------------------------------------------
@@ -79,16 +79,15 @@ x3 = np.linspace(0, 10, 20)
 y3 = np.cos(x3)
 dy3 = 0.2
 y3 = np.random.normal(y3, dy3)
-gp3 = GaussianProcess(corr='squared_exponential', theta0=0.5,
-                      thetaL=0.01, thetaU=10.0,
-                      nugget=(dy3 / y3) ** 2,
-                      random_state=0)
+
+kernel3 = kernels.RBF(0.5, (0.01, 10.0))
+gp3 = GaussianProcessRegressor(kernel=kernel3,
+                               alpha=(dy3 / y3) ** 2, random_state=0)
 gp3.fit(x3[:, None], y3)
-f3, MSE3 = gp3.predict(x[:, None], eval_MSE=True)
-f3_err = np.sqrt(MSE3)
+f3, f3_err = gp3.predict(x[:, None], return_std=True)
 
 # we have fit for the `h` parameter: print the result here:
-print("best-fit theta =", gp3.theta_[0, 0])
+print("best-fit theta =", gp3.kernel_.theta[0])
 
 
 #------------------------------------------------------------
