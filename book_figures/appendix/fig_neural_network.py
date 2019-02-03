@@ -63,14 +63,14 @@ y3 = 0
 for i, y1 in enumerate(np.linspace(1.5, -1.5, 4)):
     draw_circle(ax, (x1, y1), radius)
     ax.text(x1 - 0.9, y1, 'Input #%i' % (i + 1),
-            ha='right', va='center', fontsize=16)
+            ha='right', va='center', fontsize=10)
     draw_connecting_arrow(ax, (x1 - 0.9, y1), 0.1, (x1, y1), radius)
 
 for y2 in np.linspace(-2, 2, 5):
     draw_circle(ax, (x2, y2), radius)
 
 draw_circle(ax, (x3, y3), radius)
-ax.text(x3 + 0.8, y3, 'Output', ha='left', va='center', fontsize=16)
+ax.text(x3 + 0.8, y3, 'Output', ha='left', va='center', fontsize=10)
 draw_connecting_arrow(ax, (x3, y3), radius, (x3 + 0.8, y3), 0.1)
 
 #------------------------------------------------------------
@@ -84,9 +84,9 @@ for y2 in np.linspace(-2, 2, 5):
 
 #------------------------------------------------------------
 # Add text labels
-plt.text(x1, 2.7, "Input\nLayer", ha='center', va='top', fontsize=16)
-plt.text(x2, 2.7, "Hidden Layer", ha='center', va='top', fontsize=16)
-plt.text(x3, 2.7, "Output\nLayer", ha='center', va='top', fontsize=16)
+plt.text(x1, 2.7, "Input\nLayer", ha='center', va='top', fontsize=10)
+plt.text(x2, 2.7, "Hidden Layer", ha='center', va='top', fontsize=10)
+plt.text(x3, 2.7, "Output\nLayer", ha='center', va='top', fontsize=10)
 
 ax.set_aspect('equal')
 plt.xlim(-4, 4)
