@@ -96,7 +96,8 @@ fig.subplots_adjust(bottom=0.1, top=0.95,
 # This function plots multiple panels with the traces
 plot_mcmc([traces[i] for i in ['b0', 'A', 'T']] + [np.exp(traces['log_alpha'])],
           labels=labels, limits=limits,
-          true_values=true, fig=fig, bins=30, colors='k')
+          true_values=true, fig=fig, bins=30, colors='k',
+          bounds=[0.1, 0.08, 0.95, 0.95])
 
 # Plot the model fit
 ax = fig.add_axes([0.5, 0.7, 0.45, 0.25])
