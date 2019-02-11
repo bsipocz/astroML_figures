@@ -80,7 +80,7 @@ for i in range(6):
     ax = fig.add_subplot(321 + i)
     ax.errorbar(phased_t, y, dy, fmt='.k', ecolor='gray',
                 lw=1, ms=4, capsize=1.5, alpha=0.3)
-    ax.plot(phase_fit, y_fit, 'b', markeredgecolor='b', lw=2, fillstyle='top', linestyle='solid')
+    ax.plot(phase_fit, y_fit, 'b', markeredgecolor='b', lw=2, linestyle='solid')
 
     ax.set_xlim(0, 1)
     ax.set_ylim(plt.ylim()[::-1])

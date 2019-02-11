@@ -22,15 +22,13 @@ probability greater than 68% are circled in the first panel.
 #   To report a bug or issue, use the following forum:
 #    https://groups.google.com/forum/#!forum/astroml-general
 import numpy as np
+
+import pymc3 as pm
+
 from matplotlib import pyplot as plt
 from astroML.datasets import fetch_hogg2010test
 from astroML.plotting.mcmc import convert_to_stdev
 
-# Hack to fix import issue in older versions of pymc
-import scipy
-import scipy.misc
-scipy.derivative = scipy.misc.derivative
-import pymc
 
 #----------------------------------------------------------------------
 # This function adjusts matplotlib settings for a uniform feel in the textbook.
@@ -54,7 +52,7 @@ dyi = data['sigma_y']
 #----------------------------------------------------------------------
 # First model: no outlier correction
 # define priors on beta = (slope, intercept)
-@pymc.stochastic
+
 def beta_M0(value=np.array([2., 100.])):
     """Slope and intercept parameters for a straight line.
     The likelihood corresponds to the prior probability of the parameters."""
@@ -66,15 +64,16 @@ def beta_M0(value=np.array([2., 100.])):
     return prob_intercept + prob_slope
 
 
-@pymc.deterministic
 def model_M0(xi=xi, beta=beta_M0):
     slope, intercept = beta
     return slope * xi + intercept
 
-y = pymc.Normal('y', mu=model_M0, tau=dyi ** -2,
-                observed=True, value=yi)
 
-M0 = dict(beta_M0=beta_M0, model_M0=model_M0, y=y)
+with pm.Model() as model0:
+    y = pm.Normal('y', mu=model_M0(xi, beta_M0(np.array([])), tau=dyi ** -2,
+                  observed=yi)
+
+    M0 = dict(beta_M0=beta_M0, model_M0=model_M0, y=y)
 
 
 #----------------------------------------------------------------------
@@ -82,7 +81,6 @@ M0 = dict(beta_M0=beta_M0, model_M0=model_M0, y=y)
 # This is the mixture model given in equation 17 in Hogg et al
 
 # define priors on beta = (slope, intercept)
-@pymc.stochastic
 def beta_M1(value=np.array([2., 100.])):
     """Slope and intercept parameters for a straight line.
     The likelihood corresponds to the prior probability of the parameters."""
@@ -94,22 +92,22 @@ def beta_M1(value=np.array([2., 100.])):
     return prob_intercept + prob_slope
 
 
-@pymc.deterministic
 def model_M1(xi=xi, beta=beta_M1):
     slope, intercept = beta
     return slope * xi + intercept
 
-# uniform prior on Pb, the fraction of bad points
-Pb = pymc.Uniform('Pb', 0, 1.0, value=0.1)
 
-# uniform prior on Yb, the centroid of the outlier distribution
-Yb = pymc.Uniform('Yb', -10000, 10000, value=0)
+with pm.Model() as model1:
+    # uniform prior on Pb, the fraction of bad points
+    Pb = pm.Uniform('Pb', 0, 1.0)#, value=0.1)
 
-# uniform prior on log(sigmab), the spread of the outlier distribution
-log_sigmab = pymc.Uniform('log_sigmab', -10, 10, value=5)
+    # uniform prior on Yb, the centroid of the outlier distribution
+    Yb = pm.Uniform('Yb', -10000, 10000)#, value=0)
+
+    # uniform prior on log(sigmab), the spread of the outlier distribution
+    log_sigmab = pm.Uniform('log_sigmab', -10, 10)#, value=5)
 
 
-@pymc.deterministic
 def sigmab(log_sigmab=log_sigmab):
     return np.exp(log_sigmab)
 

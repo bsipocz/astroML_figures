@@ -21,34 +21,23 @@ from matplotlib import pyplot as plt
 from scipy.special import gamma
 from scipy.stats import norm
 from sklearn.neighbors import BallTree
+
+import pymc3 as pm
+import theano.tensor as tt
+
 from astroML.density_estimation import GaussianMixture1D
 from astroML.plotting import plot_mcmc
-# hack to fix an import issue in older versions of pymc
-import scipy
-scipy.derivative = scipy.misc.derivative
-import pymc
 
 #----------------------------------------------------------------------
 # This function adjusts matplotlib settings for a uniform feel in the textbook.
 # Note that with usetex=True, fonts are rendered with LaTeX.  This may
 # result in an error if LaTeX is not installed on your system.  In that case,
 # you can set usetex to False.
-if "setup_text_plots" not in globals():
-    from astroML.plotting import setup_text_plots
+from astroML.plotting import setup_text_plots
 setup_text_plots(fontsize=8, usetex=True)
 
 
-def get_logp(S, model):
-    """compute log(p) given a pyMC model"""
-    M = pymc.MAP(model)
-    traces = np.array([S.trace(s)[:] for s in S.stochastics])
-    logp = np.zeros(traces.shape[1])
-    for i in range(len(logp)):
-        logp[i] = -M.func(traces[:, i])
-    return logp
-
-
-def estimate_bayes_factor(traces, logp, r=0.05, return_list=False):
+def estimate_bayes_factor(traces, model, r=0.05, return_list=False):
     """Estimate the bayes factor using the local density of points"""
     D, N = traces.shape
 
@@ -59,7 +48,7 @@ def estimate_bayes_factor(traces, logp, r=0.05, return_list=False):
     bt = BallTree(traces.T)
     count = bt.query_radius(traces.T, r=r, count_only=True)
 
-    BF = logp + np.log(N) + np.log(Vr) - np.log(count)
+    BF = model.logp + np.log(N) + np.log(Vr) - np.log(count)
 
     if return_list:
         return BF
@@ -75,135 +64,54 @@ sigma1_in = 0.3
 mu2_in = 1
 sigma2_in = 1
 ratio_in = 1.5
-N = 200
+N = 20
 
 np.random.seed(10)
 gm = GaussianMixture1D([mu1_in, mu2_in],
                        [sigma1_in, sigma2_in],
                        [ratio_in, 1])
-x_sample = gm.sample(N)
+x_sample = gm.sample(N)[0].reshape(-1)
 
 #------------------------------------------------------------
-# Set up pyMC model: single gaussian
+# Set up pyMC3 model: single gaussian
 #  2 parameters: (mu, sigma)
-M1_mu = pymc.Uniform('M1_mu', -5, 5, value=0)
-M1_log_sigma = pymc.Uniform('M1_log_sigma', -10, 10, value=0)
+with pm.Model() as model1:
+    M1_mu = pm.Uniform('M1_mu', -5, 5)
+    M1_log_sigma = pm.Uniform('M1_log_sigma', -10, 10)
 
-
-@pymc.deterministic
-def M1_sigma(M1_log_sigma=M1_log_sigma):
-    return np.exp(M1_log_sigma)
-
-
-@pymc.deterministic
-def M1_tau(M1_sigma=M1_sigma):
-    return 1. / M1_sigma ** 2
-
-M1 = pymc.Normal('M1', M1_mu, M1_tau, observed=True, value=x_sample)
-model1 = dict(M1_mu=M1_mu, M1_log_sigma=M1_log_sigma,
-              M1_sigma=M1_sigma,
-              M1_tau=M1_tau, M1=M1)
-
+    M1 = pm.Normal('M1', mu=M1_mu, sd=np.exp(M1_log_sigma), observed=x_sample)
 
 #------------------------------------------------------------
-# Set up pyMC model: double gaussian
+# Set up pyMC3 model: mixture of two gaussians
 #  5 parameters: (mu1, mu2, sigma1, sigma2, ratio)
+with pm.Model() as model2:
+    M2_mu1 = pm.Uniform('M2_mu1', -5, 5)
+    M2_mu2 = pm.Uniform('M2_mu2', -5, 5)
 
-def doublegauss_like(x, mu1, mu2, sigma1, sigma2, ratio):
-    """log-likelihood for double gaussian"""
-    r1 = ratio / (1. + ratio)
-    r2 = 1 - r1
-    L = r1 * norm(mu1, sigma1).pdf(x) + r2 * norm(mu2, sigma2).pdf(x)
-    L[L == 0] = 1E-16  # prevent divide-by-zero error
-    logL = np.log(L).sum()
-    if np.isinf(logL):
-        raise pymc.ZeroProbability
-    else:
-        return logL
+    ratio = pm.Uniform('ratio', 1E-3, 1E3)
 
+    w1 = ratio / (1 + ratio)
+    w2 = 1 - w1
 
-def rdoublegauss(mu1, mu2, sigma1, sigma2, ratio, size=None):
-    """random variable from double gaussian"""
-    r1 = ratio / (1. + ratio)
-    r2 = 1 - r1
-    R = np.asarray(np.random.random(size))
+    M2_log_sigma1 = pm.Uniform('M2_log_sigma1', -10, 10)
+    M2_log_sigma2 = pm.Uniform('M2_log_sigma2', 0.1, 10)
 
-    Rshape = R.shape
-    R = np.atleast1d(R)
-
-    mask1 = (R < r1)
-    mask2 = ~mask1
-    N1 = mask1.sum()
-    N2 = R.size - N1
-
-    R[mask1] = norm(mu1, sigma1).rvs(N1)
-    R[mask2] = norm(mu2, sigma2).rvs(N2)
-
-    return R.reshape(Rshape)
-
-DoubleGauss = pymc.stochastic_from_dist('doublegauss',
-                                        logp=doublegauss_like,
-                                        random=rdoublegauss,
-                                        dtype=np.float,
-                                        mv=True)
-
-# set up our Stochastic variables, mu1, mu2, sigma1, sigma2, ratio
-M2_mu1 = pymc.Uniform('M2_mu1', -5, 5, value=0)
-M2_mu2 = pymc.Uniform('M2_mu2', -5, 5, value=1)
-
-M2_log_sigma1 = pymc.Uniform('M2_log_sigma1', -10, 10, value=0)
-M2_log_sigma2 = pymc.Uniform('M2_log_sigma2', -10, 10, value=0)
+    y = pm.NormalMixture('doublegauss',
+                         w=tt.stack([w1, w2]),
+                         mu=tt.stack([M2_mu1, M2_mu2]),
+                         sd=tt.stack([np.exp(M2_log_sigma1),
+                                      np.exp(M2_log_sigma2)]),
+                         observed=x_sample)
 
 
-@pymc.deterministic
-def M2_sigma1(M2_log_sigma1=M2_log_sigma1):
-    return np.exp(M2_log_sigma1)
-
-
-@pymc.deterministic
-def M2_sigma2(M2_log_sigma2=M2_log_sigma2):
-    return np.exp(M2_log_sigma2)
-
-M2_ratio = pymc.Uniform('M2_ratio', 1E-3, 1E3, value=1)
-
-M2 = DoubleGauss('M2', M2_mu1, M2_mu2, M2_sigma1, M2_sigma2, M2_ratio,
-                 observed=True, value=x_sample)
-
-model2 = dict(M2_mu1=M2_mu1, M2_mu2=M2_mu2,
-              M2_log_sigma1=M2_log_sigma1, M2_log_sigma2=M2_log_sigma2,
-              M2_sigma1=M2_sigma1, M2_sigma2=M2_sigma2,
-              M2_ratio=M2_ratio, M2=M2)
-
-
-#------------------------------------------------------------
-# Set up MCMC sampling
-def compute_MCMC_models(Niter=10000, burn=1000, rseed=0):
-    pymc.numpy.random.seed(rseed)
-
-    S1 = pymc.MCMC(model1)
-    S1.sample(iter=Niter, burn=burn)
-    trace1 = np.vstack([S1.trace('M1_mu')[:],
-                        S1.trace('M1_sigma')[:]])
-    logp1 = get_logp(S1, model1)
-
-    S2 = pymc.MCMC(model2)
-    S2.sample(iter=Niter, burn=burn)
-    trace2 = np.vstack([S2.trace('M2_mu1')[:],
-                        S2.trace('M2_mu2')[:],
-                        S2.trace('M2_sigma1')[:],
-                        S2.trace('M2_sigma2')[:],
-                        S2.trace('M2_ratio')[:]])
-    logp2 = get_logp(S2, model2)
-
-    return trace1, logp1, trace2, logp2
-
-trace1, logp1, trace2, logp2 = compute_MCMC_models()
+trace1 = pm.sample(draws=5000, tune=1000, model=model1)
+trace2 = pm.sample(draws=5000, tune=1000, model=model2)
 
 
 #------------------------------------------------------------
 # Compute Odds ratio with density estimation technique
-BF1, dBF1 = estimate_bayes_factor(trace1, logp1, r=0.02)
-BF2, dBF2 = estimate_bayes_factor(trace2, logp2, r=0.05)
+#BF1, dBF1 = estimate_bayes_factor(trace1, model1, r=0.02)
+#BF2, dBF2 = estimate_bayes_factor(trace2, model2, r=0.05)
 
 
 #------------------------------------------------------------

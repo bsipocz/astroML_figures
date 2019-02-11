@@ -17,11 +17,7 @@ them in the likelihood contours shown here.
 import numpy as np
 from matplotlib import pyplot as plt
 
-# Hack to fix import issue in older versions of pymc
-import scipy
-import scipy.misc
-scipy.derivative = scipy.misc.derivative
-import pymc
+import pymc3 as pm
 
 from astroML.utils.decorators import pickle_results
 from astroML.plotting.mcmc import plot_mcmc
@@ -31,23 +27,28 @@ from astroML.plotting.mcmc import plot_mcmc
 # Note that with usetex=True, fonts are rendered with LaTeX.  This may
 # result in an error if LaTeX is not installed on your system.  In that case,
 # you can set usetex to False.
-if "setup_text_plots" not in globals():
-    from astroML.plotting import setup_text_plots
+from astroML.plotting import setup_text_plots
 setup_text_plots(fontsize=8, usetex=True)
 
 
 #----------------------------------------------------------------------
 # Set up toy dataset
-def chirp(t, T, A, phi, omega, beta):
+def chirp(t, T, A, phi, omega, beta, pmc=False):
     """chirp signal"""
-    signal = A * np.sin(phi + omega * (t - T) + beta * (t - T) ** 2)
-    signal[t < T] = 0
+    mask = (t >= T)
+    if pmc:
+        signal = mask * (A * pm.math.sin(phi + omega * (t - T) + beta * (t - T) ** 2))
+    else:
+        signal = mask * (A * np.sin(phi + omega * (t - T) + beta * (t - T) ** 2))
     return signal
 
 
-def background(t, b0, b1, Omega1, Omega2):
+def background(t, b0, b1, omega1, omega2, pmc=False):
     """background signal"""
-    return b0 + b1 * np.sin(Omega1 * t) * np.sin(Omega2 * t)
+    if pmc:
+        return b0 + b1 * pm.math.sin(omega1 * t) * pm.math.sin(omega2 * t)
+    else:
+        return b0 + b1 * np.sin(omega1 * t) * np.sin(omega2 * t)
 
 
 np.random.seed(0)
@@ -78,56 +79,31 @@ y_fit = (chirp(t_fit, T_true, A_true, phi_true, omega_true, beta_true) +
 
 
 #----------------------------------------------------------------------
-# Set up MCMC sampling
-T = pymc.Uniform('T', 0, 100, value=T_true)
-A = pymc.Uniform('A', 0, 100, value=A_true)
-phi = pymc.Uniform('phi', -np.pi, np.pi, value=phi_true)
-log_omega = pymc.Uniform('log_omega', -4, 0, value=np.log(omega_true))
-log_beta = pymc.Uniform('log_beta', -6, 0, value=np.log(beta_true))
-b0 = pymc.Uniform('b0', 0, 100, value=b0_true)
-b1 = pymc.Uniform('b1', 0, 100, value=b1_true)
-log_Omega1 = pymc.Uniform('log_Omega1', -3, 0, value=np.log(Omega1_true))
-log_Omega2 = pymc.Uniform('log_Omega2', -3, 0, value=np.log(Omega2_true))
-omega = pymc.Uniform('omega', 0.001, 1, value=omega_true)
-beta = pymc.Uniform('beta', 0.001, 1, value=beta_true)
+#@pickle_results('matchedfilt_chirp2.pkl')
+def compute_MCMC(draws=3000, tune=1000):
+    with pm.Model():
+        # Set up MCMC sampling
+        T = pm.Uniform('T', 0, 100, testval=T_true)
+        A = pm.Uniform('A', 0, 100, testval=A_true)
+        phi = pm.Uniform('phi', -np.pi, np.pi, testval=phi_true)
+#        log_omega = pm.Uniform('log_omega', -4, 0, testval=np.log(omega_true))
+#        log_beta = pm.Uniform('log_beta', -6, 0, testval=np.log(beta_true))
+        b0 = pm.Uniform('b0', 0, 100, testval=b0_true)
+        b1 = pm.Uniform('b1', 0, 100, testval=b1_true)
 
+        log_Omega1 = pm.Uniform('log_Omega1', -3, 0, testval=np.log(Omega1_true))
+        log_Omega2 = pm.Uniform('log_Omega2', -3, 0, testval=np.log(Omega2_true))
 
-# uniform prior on log(Omega1)
-@pymc.deterministic
-def Omega1(log_Omega1=log_Omega1):
-    return np.exp(log_Omega1)
+        omega = pm.Uniform('omega', 0.001, 1, testval=omega_true)
+        beta = pm.Uniform('beta', 0.001, 1, testval=beta_true)
 
+        y = pm.Normal('y', mu=(chirp(t, T, A, phi, omega, beta, True)
+                               + background(t, b0, b1, np.exp(log_Omega1), np.exp(log_Omega2), True)),
+                      tau=sigma ** -2, observed=y_obs)
 
-# uniform prior on log(Omega2)
-@pymc.deterministic
-def Omega2(log_Omega2=log_Omega2):
-    return np.exp(log_Omega2)
+        traces = pm.sample(draws=draws, tune=tune)
+        return traces
 
-
-@pymc.deterministic
-def y_model(t=t, T=T, A=A, phi=phi, omega=omega, beta=beta,
-            b0=b0, b1=b1, Omega1=Omega1, Omega2=Omega2):
-    return (chirp(t, T, A, phi, omega, beta)
-            + background(t, b0, b1, Omega1, Omega2))
-
-y = pymc.Normal('y', mu=y_model, tau=sigma ** -2, observed=True, value=y_obs)
-
-model = dict(T=T, A=A, phi=phi, b0=b0, b1=b1,
-             log_omega=log_omega, omega=omega,
-             log_beta=log_beta, beta=beta,
-             log_Omega1=log_Omega1, Omega1=Omega1,
-             log_Omega2=log_Omega2, Omega2=Omega2,
-             y_model=y_model, y=y)
-
-
-#----------------------------------------------------------------------
-# Run the MCMC sampling (saving the results to a pickle file)
-@pickle_results('matchedfilt_chirp2.pkl')
-def compute_MCMC(niter=30000, burn=2000):
-    S = pymc.MCMC(model)
-    S.sample(iter=30000, burn=2000)
-    traces = [S.trace(s)[:] for s in ['T', 'A', 'omega', 'beta']]
-    return traces
 
 traces = compute_MCMC()
 
@@ -140,7 +116,8 @@ true = [T_true, A_true, omega_true, beta_true]
 fig = plt.figure(figsize=(5, 5))
 
 # This function plots multiple panels with the traces
-axes_list = plot_mcmc(traces, labels=labels, limits=limits,
+axes_list = plot_mcmc([traces[i] for i in ['T', 'A', 'omega', 'beta']],
+                      labels=labels, limits=limits,
                       true_values=true, fig=fig,
                       bins=30, colors='k',
                       bounds=[0.14, 0.08, 0.95, 0.95])
