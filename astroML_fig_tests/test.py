@@ -58,10 +58,9 @@ def check_figure(filename, tol=1E-3):
 
     dirname, fname = os.path.split(filename)
 
-    testdir = os.path.dirname(__file__)
-    baseline = os.path.abspath(os.path.join(testdir,
+    baseline = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                             'baseline', file_fmt))
-    result = os.path.abspath(os.path.join(testdir,
+    result = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                           'results', file_fmt))
 
     resultdir = os.path.dirname(result)
@@ -70,13 +69,15 @@ def check_figure(filename, tol=1E-3):
 
     plt.close('all')
 
-    mpl_setup = open(os.path.join(testdir, 'settings.py')).read()
-
     with set_cwd(dirname):
         with open(fname) as f:
-            code = compile(mpl_setup + f.read(), "somefile.py", 'exec')
-
+            print("Plotting {}".format(fname))
+            # We use non-GUI backend for testing
+            code = compile(f.read().replace('plt.show()', ''),
+                           "somefile.py", 'exec')
             exec(code, {'pl' : plt, 'plt' : plt, 'pylab' : plt})
+
+    err = []
     for fignum in plt.get_fignums():
         fig = plt.figure(fignum)
 
@@ -85,14 +86,15 @@ def check_figure(filename, tol=1E-3):
         else:
             fig.savefig(result.format(fignum))
 
-        err = compare_images(baseline.format(fignum),
-                             result.format(fignum),
-                             tol)
-        if err:
-            if filename in KNOWN_FAILURES:
-                raise SkipTest("known errors in {0}".format(filename))
-            else:
-                raise ImageComparisonFailure(err)
+        err.append(compare_images(baseline.format(fignum),
+                                  result.format(fignum),
+                                  tol))
+
+    if err:
+        if filename in KNOWN_FAILURES:
+            raise SkipTest("known errors in {0}".format(filename))
+        else:
+            raise ImageComparisonFailure(err)
 
 
 def test_book_figures(tol=0.1):
