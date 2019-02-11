@@ -138,7 +138,7 @@ limits = [(-0.24, 0.12),
 
 # we assume mu1 < mu2, but the results may be switched
 #  due to the symmetry of the problem.  If so, switch back
-if np.median(trace2[0]) > np.median(trace2[1]):
+if np.median(trace2['M1_mu']) > np.median(trace2[1]):
     trace2 = trace2[[1, 0, 3, 2, 4], :]
     N2_norm_mu = N2.mu[N2.M2_mu2, N2.M2_mu1,
                        N2.M2_sigma2, N2.M2_sigma1, N2.M2_ratio]

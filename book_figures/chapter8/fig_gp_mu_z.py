@@ -20,7 +20,7 @@ from __future__ import print_function, division
 import numpy as np
 from matplotlib import pyplot as plt
 
-from sklearn.gaussian_process import GaussianProcess
+from sklearn.gaussian_process import GaussianProcessRegressor, kernels
 
 from astroML.cosmology import Cosmology
 from astroML.datasets import generate_mu_z
@@ -39,7 +39,7 @@ setup_text_plots(fontsize=8, usetex=True)
 z_sample, mu_sample, dmu = generate_mu_z(100, random_state=0)
 
 cosmo = Cosmology()
-z = np.linspace(0.01, 2, 1000)
+z = np.linspace(0.01, 2, 100)
 mu_true = np.asarray([cosmo.mu(zi) for zi in z])
 
 #------------------------------------------------------------
@@ -47,16 +47,16 @@ mu_true = np.asarray([cosmo.mu(zi) for zi in z])
 # Mesh the input space for evaluations of the real function,
 # the prediction and its MSE
 z_fit = np.linspace(0, 2, 1000)
-gp = GaussianProcess(corr='squared_exponential', theta0=1e-1,
-                     thetaL=1e-2, thetaU=1,
-                     normalize=False,
-                     nugget=(dmu / mu_sample) ** 2,
-                     random_start=1)
-gp.fit(z_sample[:, None], mu_sample)
-y_pred, MSE = gp.predict(z_fit[:, None], eval_MSE=True)
-sigma = np.sqrt(MSE)
-print("theta:", gp.theta_)
+kernel = kernels.RBF(1/5, (1.1, 1.7))
 
+gp = GaussianProcessRegressor(kernel=kernel,
+                              normalize_y=True,
+                              alpha=(dmu) **2,
+                              n_restarts_optimizer=1)
+#                              )
+gp.fit(z_sample[:, None], mu_sample)
+y_pred, sigma = gp.predict(z_fit[:, None], return_std=True)
+print("theta:", gp.kernel_.theta[0])
 
 #------------------------------------------------------------
 # Plot the gaussian process

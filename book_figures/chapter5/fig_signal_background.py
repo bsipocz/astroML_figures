@@ -20,11 +20,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy import stats
 
-# Hack to fix import issue in older versions of pymc
-import scipy
-import scipy.misc
-scipy.derivative = scipy.misc.derivative
-import pymc
+import pymc3 as pm
 
 from astroML.plotting import plot_mcmc
 
@@ -60,25 +56,23 @@ x[i_bg] = background.rvs(np.sum(i_bg))
 
 #----------------------------------------------------------------------
 # Set up MCMC sampling
-A = pymc.Uniform('A', 0, 1, value=0.5)
-x0 = pymc.Uniform('x0', 0, 10, value=5)
-log_sigma = pymc.Uniform('log_sigma', -5, 5, value=0)
+with pm.Model() as pm:
+    A = pm.Uniform('A', 0, 1, value=0.5)
+    x0 = pm.Uniform('x0', 0, 10, value=5)
+    log_sigma = pm.Uniform('log_sigma', -5, 5, value=0)
 
+    def sigma(log_sigma=log_sigma):
+        return np.exp(log_sigma)
 
-@pymc.deterministic
-def sigma(log_sigma=log_sigma):
-    return np.exp(log_sigma)
+    def sigbg_like(x, A, x0, sigma):
+        """signal + background likelihood"""
+        return np.sum(np.log(A * np.exp(-0.5 * ((x - x0) / sigma) ** 2)
+                             / np.sqrt(2 * np.pi) / sigma
+                             + (1 - A) / W_true))
 
-
-def sigbg_like(x, A, x0, sigma):
-    """signal + background likelihood"""
-    return np.sum(np.log(A * np.exp(-0.5 * ((x - x0) / sigma) ** 2)
-                         / np.sqrt(2 * np.pi) / sigma
-                         + (1 - A) / W_true))
-
-SigBG = pymc.stochastic_from_dist('sigbg',
-                                  logp=sigbg_like,
-                                  dtype=np.float, mv=True)
+    SigBG = pymc.stochastic_from_dist('sigbg',
+                                      logp=sigbg_like,
+                                      dtype=np.float, mv=True)
 
 M = SigBG('M', A, x0, sigma, observed=True, value=x)
 
