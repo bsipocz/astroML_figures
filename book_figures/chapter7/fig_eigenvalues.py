@@ -17,9 +17,10 @@ using the first ten eigenvectors.
 #   For more information, see http://astroML.github.com
 #   To report a bug or issue, use the following forum:
 #    https://groups.google.com/forum/#!forum/astroml-general
-import numpy as np
+import matplotlib
 from matplotlib import pyplot as plt
 from astroML import datasets
+matplotlib.rcParams['axes.xmargin'] = 0
 
 #----------------------------------------------------------------------
 # This function adjusts matplotlib settings for a uniform feel in the textbook.

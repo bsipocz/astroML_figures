@@ -18,8 +18,8 @@ scaling.
 #   To report a bug or issue, use the following forum:
 #    https://groups.google.com/forum/#!forum/astroml-general
 import numpy as np
+import matplotlib
 from matplotlib import pyplot as plt
-
 from astroML.datasets import sdss_corrected_spectra
 
 #----------------------------------------------------------------------
@@ -27,9 +27,9 @@ from astroML.datasets import sdss_corrected_spectra
 # Note that with usetex=True, fonts are rendered with LaTeX.  This may
 # result in an error if LaTeX is not installed on your system.  In that case,
 # you can set usetex to False.
-if "setup_text_plots" not in globals():
-    from astroML.plotting import setup_text_plots
+from astroML.plotting import setup_text_plots
 setup_text_plots(fontsize=8, usetex=True)
+matplotlib.rcParams['axes.xmargin'] = 0
 
 #----------------------------------------------------------------------
 # Use pre-computed PCA to reconstruct spectra
@@ -56,6 +56,7 @@ for i in range(ncols):
     for j in range(nrows):
         ax = fig.add_subplot(nrows, ncols, ncols * j + 1 + i)
         ax.plot(lam, spec_sample[ncols * j + i], '-k', lw=1)
+        ax.set_xlim(3100, 7999)
 
         ax.yaxis.set_major_formatter(plt.NullFormatter())
         ax.xaxis.set_major_locator(plt.MultipleLocator(1000))
@@ -64,7 +65,6 @@ for i in range(ncols):
         else:
             plt.xlabel(r'wavelength $(\AA)$')
 
-        ax.set_xlim(3000, 7999)
         ylim = ax.get_ylim()
         dy = 0.05 * (ylim[1] - ylim[0])
         ax.set_ylim(ylim[0] - dy, ylim[1] + dy)
