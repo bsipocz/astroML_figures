@@ -21,6 +21,7 @@ See table 10.2 for the classification performance.
 from __future__ import print_function
 
 import numpy as np
+import matplotlib
 from matplotlib import pyplot as plt
 from astroML.classification import GMMBayes
 from sklearn.model_selection import train_test_split
@@ -34,6 +35,8 @@ from astroML.datasets import fetch_LINEAR_geneva
 if "setup_text_plots" not in globals():
     from astroML.plotting import setup_text_plots
 setup_text_plots(fontsize=8, usetex=True)
+matplotlib.rcParams['image.cmap'] = 'Set1'
+
 
 data = fetch_LINEAR_geneva()
 
