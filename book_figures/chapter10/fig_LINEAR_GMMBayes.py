@@ -23,6 +23,7 @@ from __future__ import print_function
 import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
+from matplotlib.colors import ListedColormap
 from astroML.classification import GMMBayes
 from sklearn.model_selection import train_test_split
 from astroML.datasets import fetch_LINEAR_geneva
@@ -35,7 +36,20 @@ from astroML.datasets import fetch_LINEAR_geneva
 if "setup_text_plots" not in globals():
     from astroML.plotting import setup_text_plots
 setup_text_plots(fontsize=8, usetex=True)
-matplotlib.rcParams['image.cmap'] = 'Set1'
+
+
+cdict = ((0.65098039215686276, 0.33725490196078434, 0.15686274509803921),
+         (0.30196078431372547, 0.68627450980392157, 0.29019607843137257),
+         (0.96862745098039216, 0.50588235294117645, 0.74901960784313726),
+         (0.59607843137254901, 0.30588235294117649, 0.63921568627450975),
+         (0.21568627450980393, 0.49411764705882355, 0.72156862745098038),
+         (1.0,                 0.49803921568627452, 0.0                ))
+
+
+cl_cmap = ListedColormap(cdict, 'cl')
+
+plt.register_cmap('cl', cmap=cl_cmap)
+matplotlib.rcParams['image.cmap'] = 'cl'
 
 
 data = fetch_LINEAR_geneva()
