@@ -22,29 +22,22 @@ from matplotlib import pyplot as plt
 import pymc3 as pm
 
 from astroML.plotting.mcmc import plot_mcmc
-from astroML.utils.decorators import pickle_results
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # This function adjusts matplotlib settings for a uniform feel in the textbook.
 # Note that with usetex=True, fonts are rendered with LaTeX.  This may
 # result in an error if LaTeX is not installed on your system.  In that case,
 # you can set usetex to False.
-from astroML.plotting import setup_text_plots
+if "setup_text_plots" not in globals():
+    from astroML.plotting import setup_text_plots
+
 setup_text_plots(fontsize=8, usetex=True)
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Set up toy dataset
 def chirp(t, b0, beta, A, omega):
     return b0 + A * np.sin(omega * t + beta * t * t)
-
-
-def beta(log_beta):
-    return np.exp(log_beta)
-
-
-def omega(log_omega):
-    return np.exp(log_omega)
 
 
 np.random.seed(0)
@@ -61,53 +54,52 @@ t = 100 * np.random.random(N)
 y_true = chirp(t, b0_true, beta_true, A_true, omega_true)
 y_obs = np.random.normal(y_true, sigma)
 
+
 # ----------------------------------------------------------------------
 # Set up MCMC sampling
-#@pickle_results('matchedfilt_chirp.pkl')
-def compute_MCMC_results(draws=12000, tune=5000):
-    with pm.Model():
-        b0 = pm.Uniform('b0', 5, 11)
-        A = pm.Uniform('A', 4.5, 10)
-        log_beta = pm.Uniform('log_beta', -5, -4)
-        log_omega = pm.Uniform('log_omega', -4, 0)
+with pm.Model():
+    b0 = pm.Uniform('b0', 0, 50, testval=50 * np.random.random())
+    A = pm.Uniform('A', 0, 50, testval=50 * np.random.random())
+    log_beta = pm.Uniform('log_beta', -10, 10, testval=-4.6)
+    log_omega = pm.Uniform('log_omega', -10, 10, testval=-2.3)
 
-        y = pm.Normal('y', mu=chirp(t, b0, beta(log_beta), A, omega(log_omega)),
-                      sd=sigma, observed=y_obs)
+    y = pm.Normal('y', mu=chirp(t, b0, np.exp(log_beta), A, np.exp(log_omega)),
+                  sd=sigma, observed=y_obs)
 
-        traces = pm.sample(draws=draws, tune=tune)
-
-        return traces
+    step = pm.Metropolis()
+    traces = pm.sample(draws=5000, tune=2000, step=step)
 
 
-traces = compute_MCMC_results()
+# ----------------------------------------------------------------------
+# Use the summary() function to provide statistics for each variable
 mean_vals = pm.summary(traces)['mean']
-mean_vals['omega'] = omega(mean_vals.pop('log_omega'))
-mean_vals['beta'] = beta(mean_vals.pop('log_beta'))
-
+mean_vals['omega'] = np.exp(mean_vals.pop('log_omega'))
+mean_vals['beta'] = np.exp(mean_vals.pop('log_beta'))
 
 labels = ['$b_0$', '$A$', r'$\omega$', r'$\beta$']
-limits = [(9.5, 11.3), (0, 6.4), (0.065, 0.215), (0.00975, 0.1045)]
+limits = [(9.5, 11.3), (3.6, 6.4), (0.065, 0.115), (0.00975, 0.01045)]
 true = [b0_true, A_true, omega_true, beta_true]
 
 
 t_fit = np.linspace(0, 100, 1000)
 
-
-# ----------------------------------------------------------------------
-# Find the Maximum a posteriori values
 fig = plt.figure(figsize=(5, 5))
 
 ax = plt.axes([0.5, 0.7, 0.45, 0.25])
 t_fit = np.linspace(0, 100, 1001)
 y_fit = chirp(t_fit, **mean_vals)
+
+
+# ----------------------------------------------------------------------
+# Plot multiple panels with the traces
 plt.scatter(t, y_obs, s=9, lw=0, c='k')
 plt.plot(t_fit, y_fit, '-k')
 plt.xlim(0, 100)
 plt.xlabel('$t$')
 plt.ylabel(r'$h_{\rm obs}$')
 
-# This function plots multiple panels with the traces
-plot_mcmc([traces[ii] for ii in ['b0', 'A']] + [omega(traces['log_omega']), beta(traces['log_beta'])],
+plot_mcmc([traces[ii] for ii in ['b0', 'A']]
+          + [np.exp(traces['log_omega']), np.exp(traces['log_beta'])],
           labels=labels, limits=limits, true_values=true, fig=fig,
           bins=30, bounds=[0.12, 0.08, 0.95, 0.91], colors='k')
 plt.show()

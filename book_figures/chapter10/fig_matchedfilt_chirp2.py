@@ -19,36 +19,30 @@ from matplotlib import pyplot as plt
 
 import pymc3 as pm
 
-from astroML.utils.decorators import pickle_results
 from astroML.plotting.mcmc import plot_mcmc
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # This function adjusts matplotlib settings for a uniform feel in the textbook.
 # Note that with usetex=True, fonts are rendered with LaTeX.  This may
 # result in an error if LaTeX is not installed on your system.  In that case,
 # you can set usetex to False.
-from astroML.plotting import setup_text_plots
+if "setup_text_plots" not in globals():
+    from astroML.plotting import setup_text_plots
 setup_text_plots(fontsize=8, usetex=True)
 
 
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Set up toy dataset
-def chirp(t, T, A, phi, omega, beta, pmc=False):
+def chirp(t, T, A, phi, omega, beta):
     """chirp signal"""
     mask = (t >= T)
-    if pmc:
-        signal = mask * (A * pm.math.sin(phi + omega * (t - T) + beta * (t - T) ** 2))
-    else:
-        signal = mask * (A * np.sin(phi + omega * (t - T) + beta * (t - T) ** 2))
+    signal = mask * (A * np.sin(phi + omega * (t - T) + beta * (t - T) ** 2))
     return signal
 
 
-def background(t, b0, b1, omega1, omega2, pmc=False):
+def background(t, b0, b1, omega1, omega2):
     """background signal"""
-    if pmc:
-        return b0 + b1 * pm.math.sin(omega1 * t) * pm.math.sin(omega2 * t)
-    else:
-        return b0 + b1 * np.sin(omega1 * t) * np.sin(omega2 * t)
+    return b0 + b1 * np.sin(omega1 * t) * np.sin(omega2 * t)
 
 
 np.random.seed(0)
@@ -60,14 +54,14 @@ omega_true = 0.1
 beta_true = 0.02
 b0_true = 0.5
 b1_true = 1.0
-Omega1_true = 0.3
-Omega2_true = 0.4
+omega1_true = 0.3
+omega2_true = 0.4
 sigma = 0.1
 
 t = 100 * np.random.random(N)
 
 signal = chirp(t, T_true, A_true, phi_true, omega_true, beta_true)
-bg = background(t, b0_true, b1_true, Omega1_true, Omega2_true)
+bg = background(t, b0_true, b1_true, omega1_true, omega2_true)
 
 y_true = signal + bg
 
@@ -75,43 +69,41 @@ y_obs = np.random.normal(y_true, sigma)
 
 t_fit = np.linspace(0, 100, 1000)
 y_fit = (chirp(t_fit, T_true, A_true, phi_true, omega_true, beta_true) +
-         background(t_fit, b0_true, b1_true, Omega1_true, Omega2_true))
+         background(t_fit, b0_true, b1_true, omega1_true, omega2_true))
 
 
-#----------------------------------------------------------------------
-#@pickle_results('matchedfilt_chirp2.pkl')
-def compute_MCMC(draws=3000, tune=1000):
-    with pm.Model():
-        # Set up MCMC sampling
-        T = pm.Uniform('T', 0, 100, testval=T_true)
-        A = pm.Uniform('A', 0, 100, testval=A_true)
-        phi = pm.Uniform('phi', -np.pi, np.pi, testval=phi_true)
-#        log_omega = pm.Uniform('log_omega', -4, 0, testval=np.log(omega_true))
-#        log_beta = pm.Uniform('log_beta', -6, 0, testval=np.log(beta_true))
-        b0 = pm.Uniform('b0', 0, 100, testval=b0_true)
-        b1 = pm.Uniform('b1', 0, 100, testval=b1_true)
+# ----------------------------------------------------------------------
+# Set up and run MCMC sampling
 
-        log_Omega1 = pm.Uniform('log_Omega1', -3, 0, testval=np.log(Omega1_true))
-        log_Omega2 = pm.Uniform('log_Omega2', -3, 0, testval=np.log(Omega2_true))
+with pm.Model():
 
-        omega = pm.Uniform('omega', 0.001, 1, testval=omega_true)
-        beta = pm.Uniform('beta', 0.001, 1, testval=beta_true)
+    T = pm.Uniform('T', 0, 100, testval=T_true)
+    A = pm.Uniform('A', 0, 100, testval=A_true)
+    phi = pm.Uniform('phi', -np.pi, np.pi, testval=phi_true)
 
-        y = pm.Normal('y', mu=(chirp(t, T, A, phi, omega, beta, True)
-                               + background(t, b0, b1, np.exp(log_Omega1), np.exp(log_Omega2), True)),
-                      tau=sigma ** -2, observed=y_obs)
+    b0 = pm.Uniform('b0', 0, 100, testval=b0_true)
+    b1 = pm.Uniform('b1', 0, 100, testval=b1_true)
 
-        traces = pm.sample(draws=draws, tune=tune)
-        return traces
+    log_omega1 = pm.Uniform('log_omega1', -3, 0, testval=np.log(omega1_true))
+    log_omega2 = pm.Uniform('log_omega2', -3, 0, testval=np.log(omega2_true))
 
+    omega = pm.Uniform('omega', 0.001, 1, testval=omega_true)
+    beta = pm.Uniform('beta', 0.001, 1, testval=beta_true)
 
-traces = compute_MCMC()
+    y = pm.Normal('y', mu=(chirp(t, T, A, phi, omega, beta)
+                           + background(t, b0, b1, np.exp(log_omega1), np.exp(log_omega2))),
+                  tau=sigma ** -2, observed=y_obs)
+
+    step = pm.Metropolis()
+
+    traces = pm.sample(draws=5000, tune=2000, step=step)
+
 
 labels = ['$T$', '$A$', r'$\omega$', r'$\beta$']
 limits = [(29.75, 30.25), (0.75, 0.83), (0.085, 0.115), (0.0197, 0.0202)]
 true = [T_true, A_true, omega_true, beta_true]
 
-#------------------------------------------------------------
+# ------------------------------------------------------------
 # Plot results
 fig = plt.figure(figsize=(5, 5))
 
