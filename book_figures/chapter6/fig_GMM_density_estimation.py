@@ -39,8 +39,8 @@ setup_text_plots(fontsize=8, usetex=True)
 #------------------------------------------------------------
 # Generate our data: a mix of several Cauchy distributions
 #  this is the same data used in the Bayesian Blocks figure
-random_state = np.random.RandomState(seed=0)
-N = 10000
+random_state = np.random.RandomState(seed=3)
+N = 20000
 mu_gamma_f = [(5, 1.0, 0.1),
               (7, 0.5, 0.5),
               (9, 0.1, 0.1),
@@ -58,7 +58,7 @@ x = x[x < 30]
 # plot the results
 fig = plt.figure(figsize=(5, 5))
 fig.subplots_adjust(bottom=0.08, top=0.95, right=0.95, hspace=0.1)
-N_values = (500, 5000)
+N_values = (200, 5000)
 subplots = (211, 212)
 k_values = (10, 100)
 
@@ -75,7 +75,7 @@ for N, k, subplot in zip(N_values, k_values, subplots):
     # Compute density via Gaussian Mixtures
     # we'll try several numbers of clusters
     n_components = np.arange(3, 16)
-    gmms = [GaussianMixture(n_components=n).fit(xN.reshape(-1, 1)) for n in n_components]
+    gmms = [GaussianMixture(n_components=n, random_state=random_state).fit(xN.reshape(-1, 1)) for n in n_components]
     BICs = [gmm.bic(xN.reshape(-1, 1)) for gmm in gmms]
     i_min = np.argmin(BICs)
     t = np.linspace(-10, 30, 1000)
