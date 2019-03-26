@@ -116,7 +116,7 @@ axes_list = plot_mcmc([traces[i] for i in ['T', 'A', 'omega', 'beta']],
 
 for ax in axes_list:
     for axis in [ax.xaxis, ax.yaxis]:
-        axis.set_major_locator(plt.MaxNLocator(5))
+        axis.set_major_locator(plt.MaxNLocator(4))
 
 ax = fig.add_axes([0.52, 0.7, 0.43, 0.25])
 ax.scatter(t, y_obs, s=9, lw=0, c='k')

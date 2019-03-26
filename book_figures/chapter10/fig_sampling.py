@@ -74,7 +74,7 @@ omega /= 2 * np.pi
 #------------------------------------------------------------
 # Prepare the figures
 fig = plt.figure(figsize=(5, 2.5))
-fig.subplots_adjust(bottom=0.15, hspace=0.35, wspace=0.25,
+fig.subplots_adjust(bottom=0.15, hspace=0.5, wspace=0.3,
                     left=0.11, right=0.95)
 
 ax = fig.add_subplot(221)

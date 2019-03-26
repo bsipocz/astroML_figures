@@ -132,5 +132,5 @@ ax.set_xlabel('$x$')
 ax.set_ylabel('$p(x)dx$')
 ax.text(0.74, 0.95, "KS test:\nD = %.2f\np = %.2f" % (D, p),
         ha='left', va='top', transform=ax.transAxes)
-
+ax.set_ylim(0, 0.65)
 plt.show()

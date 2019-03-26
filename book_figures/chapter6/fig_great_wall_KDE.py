@@ -45,7 +45,7 @@ X = fetch_great_wall()
 Nx = 50
 Ny = 125
 xmin, xmax = (-375, -175)
-ymin, ymax = (-300, 200)
+ymin, ymax = (-290, 200)
 
 #------------------------------------------------------------
 # Evaluate for several models

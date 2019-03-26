@@ -125,8 +125,8 @@ for i in range(4):
     ax.plot([0, 2], [0, 0], ':k', lw=1)
     ax.plot([1, 1], [-1, 1], ':k', lw=1)
 
-    ax.set_xlim(0.001, 2)
-    ax.set_ylim(-0.999, 1)
+    ax.set_xlim(0.01, 2)
+    ax.set_ylim(-0.99, 1)
 
     if i in (1, 3):
         ax.yaxis.set_major_formatter(plt.NullFormatter())

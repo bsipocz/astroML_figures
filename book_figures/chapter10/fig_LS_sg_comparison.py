@@ -170,7 +170,7 @@ ax = fig.add_subplot(211)
 ax.errorbar(t, y_obs, dy, fmt='.k', lw=1, ecolor='gray')
 ax.plot([-20, 320], [10, 10], ':k', lw=1)
 
-ax.set_xlim(-20, 320)
+ax.set_xlim(-10, 310)
 ax.set_xlabel('$t$')
 ax.set_ylabel('$y(t)$')
 

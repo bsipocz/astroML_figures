@@ -87,7 +87,7 @@ for N, k, subplot in zip(N_values, k_values, subplots):
     ax.plot(xN, -0.005 * np.ones(len(xN)), '|k', lw=1.5)
     hist(xN, bins='blocks', ax=ax, density=True, zorder=1,
          histtype='stepfilled', lw=1.5, color='k', alpha=0.2,
-         label="Bayesian Blocks")
+         label="Bayesian Blocks", edgecolor='none')
     ax.plot(t, np.exp(logprob), '-', color='gray',
             label="Mixture Model\n(%i components)" % n_components[i_min])
     ax.plot(t, dens_kde, '-', color='black', zorder=3,
