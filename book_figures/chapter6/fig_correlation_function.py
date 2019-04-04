@@ -66,12 +66,12 @@ print("  red gals: ", len(data_red))
 print("  blue gals:", len(data_blue))
 
 
-#------------------------------------------------------------
+# ------------------------------------------------------------
 # Set up correlation function computation
 #  This calculation takes a long time with the bootstrap resampling,
 #  so we'll save the results.
 @pickle_results("correlation_functions.pkl")
-def compute_results(Nbins=16, Nbootstraps=10,  method='landy-szalay', rseed=0):
+def compute_results(Nbins=16, Nbootstraps=10, method='landy-szalay', rseed=0):
     np.random.seed(rseed)
     bins = 10 ** np.linspace(np.log10(1 / 60.), np.log10(6), 16)
 
@@ -85,12 +85,13 @@ def compute_results(Nbins=16, Nbootstraps=10,  method='landy-szalay', rseed=0):
 
     return results
 
+
 (bins, r_corr, r_corr_err, r_bootstraps,
  b_corr, b_corr_err, b_bootstraps) = compute_results()
 
 bin_centers = 0.5 * (bins[1:] + bins[:-1])
 
-#------------------------------------------------------------
+# ------------------------------------------------------------
 # Plot the results
 corr = [r_corr, b_corr]
 corr_err = [r_corr_err, b_corr_err]
@@ -114,6 +115,7 @@ for i in range(2):
     ax.text(0.95, 0.95, labels[i],
             ha='right', va='top', transform=ax.transAxes)
     ax.set_xlabel(r'$\theta\ (deg)$')
+    ax.set_ylim(0.02, 10)
     if i == 0:
         ax.set_ylabel(r'$\hat{w}(\theta)$')
 

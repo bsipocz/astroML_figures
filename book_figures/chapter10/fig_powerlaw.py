@@ -70,7 +70,7 @@ for i, beta in enumerate([1.0, 2.0]):
     ax2.set_ylim(1E-6, 1E1)
 
     ax2.set_xlabel(r'$f$')
-
+    ax2.yaxis.set_minor_locator(plt.NullLocator())
     if i == 1:
         ax1.yaxis.set_major_formatter(plt.NullFormatter())
         ax2.yaxis.set_major_formatter(plt.NullFormatter())

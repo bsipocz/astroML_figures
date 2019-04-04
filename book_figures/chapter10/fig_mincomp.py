@@ -95,5 +95,5 @@ ax.plot(f, spec_filt_PSD, '-k')
 ax.set_xlabel(r'$f$')
 ax.set_ylabel('$PSD(f)$')
 ax.set_xlim(0, 2000)
-
+ax.yaxis.set_major_locator(plt.LogLocator(100))
 plt.show()

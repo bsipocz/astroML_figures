@@ -70,7 +70,7 @@ X = gaussian_basis(z_sample[:, np.newaxis], centers, widths)
 fig = plt.figure(figsize=(5, 2.7))
 fig.subplots_adjust(left=0.1, right=0.95,
                     bottom=0.12, top=0.95,
-                    hspace=0.15, wspace=0.2)
+                    hspace=0.18, wspace=0.25)
 
 regularization = ['none', 'l2', 'l1']
 kwargs = [dict(), dict(alpha=0.005), dict(alpha=0.001)]
@@ -102,6 +102,7 @@ for i in range(3):
     ax.errorbar(z_sample, mu_sample, dmu, fmt='.k', ecolor='gray', lw=1, ms=4)
     ax.set_xlim(0.001, 1.8)
     ax.set_ylim(36, 52)
+    ax.yaxis.set_major_locator(plt.MultipleLocator(3))
     ax.text(0.05, 0.93, labels[i],
             ha='left', va='top',
             bbox=dict(boxstyle='round', ec='k', fc='w'),
@@ -111,6 +112,7 @@ for i in range(3):
     ax = plt.subplot(234 + i)
     ax.xaxis.set_major_locator(plt.MultipleLocator(0.5))
     ax.set_xlabel('$z$')
+
     if i == 0:
         ax.set_ylabel(r'$\theta$')
         w *= 1E-12
@@ -121,10 +123,11 @@ for i in range(3):
     ax.set_xlim(-0.05, 1.8)
 
     if i == 1:
-        ax.set_ylim(-2, 4)
+        ax.set_ylim(-1, 5)
     elif i == 2:
-        ax.set_ylim(-0.5, 2)
+        ax.set_ylim(-0.5, 1.9)
 
+    ax.yaxis.set_major_locator(plt.MaxNLocator(6))
     ax.text(0.05, 0.93, labels[i],
             ha='left', va='top',
             bbox=dict(boxstyle='round', ec='k', fc='w'),

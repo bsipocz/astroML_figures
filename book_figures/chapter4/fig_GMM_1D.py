@@ -85,6 +85,7 @@ pdf_individual = responsibilities * pdf[:, np.newaxis]
 ax.hist(X, 30, density=True, histtype='stepfilled', alpha=0.4)
 ax.plot(x, pdf, '-k')
 ax.plot(x, pdf_individual, '--k')
+ax.set_ylim(0, np.max(pdf) * 1.15)
 ax.text(0.04, 0.96, "Best-fit Mixture",
         ha='left', va='top', transform=ax.transAxes)
 ax.set_xlabel('$x$')
@@ -93,11 +94,12 @@ ax.set_ylabel('$p(x)$')
 
 # plot 2: AIC and BIC
 ax = fig.add_subplot(132)
+ax.yaxis.set_major_locator(plt.MultipleLocator(50))
 ax.plot(N, AIC, '-k', label='AIC')
 ax.plot(N, BIC, '--k', label='BIC')
 ax.set_xlabel('n. components')
 ax.set_ylabel('information criterion')
-ax.legend(loc=2)
+ax.legend(loc=2, framealpha=1)
 
 
 # plot 3: posterior probabilities for each component

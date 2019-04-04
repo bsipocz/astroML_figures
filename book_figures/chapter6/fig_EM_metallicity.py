@@ -112,6 +112,7 @@ ax.plot(N, AIC, '-k', label='AIC')
 ax.plot(N, BIC, ':k', label='BIC')
 ax.legend(loc=1)
 ax.set_xlabel('N components')
+ax.yaxis.set_major_locator(plt.MultipleLocator(1000))
 plt.setp(ax.get_yticklabels(), fontsize=7)
 
 # plot best configurations for AIC and BIC

@@ -108,6 +108,7 @@ ax.set_xlabel('$t$')
 ax.set_ylabel('$y(t)$')
 ax.set_xlim(0, 100)
 ax.set_ylim(-0.2, 1.5)
+ax.yaxis.set_major_locator(plt.MultipleLocator(0.4))
 
 # Fourth panel: PSD of window
 ax = fig.add_subplot(224)

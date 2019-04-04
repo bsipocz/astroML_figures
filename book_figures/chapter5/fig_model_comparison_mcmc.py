@@ -154,7 +154,7 @@ ax, = plot_mcmc([trace1['M1_mu'], np.exp(trace1['M1_log_sigma'])],
                 fig=fig, bounds=[0.6, 0.6, 0.95, 0.95],
                 limits=[(0.3, 0.65), (0.75, 1.05)],
                 labels=[r'$\mu$', r'$\sigma$'], colors='k')
-
+ax.xaxis.set_major_locator(plt.MultipleLocator(0.1))
 ax.text(0.05, 0.95, "Single Gaussian fit", va='top', ha='left',
         transform=ax.transAxes)
 
