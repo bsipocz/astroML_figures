@@ -21,9 +21,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from sklearn.svm import SVC
-from sklearn import metrics
 
-from astroML.datasets import fetch_rrlyrae_mags
 from astroML.utils.decorators import pickle_results
 from astroML.datasets import fetch_rrlyrae_combined
 from astroML.utils import split_samples
@@ -106,7 +104,7 @@ Z = gaussian_filter(Z, 2)
 # plot the results
 fig = plt.figure(figsize=(5, 2.5))
 fig.subplots_adjust(bottom=0.15, top=0.95, hspace=0.0,
-                    left=0.1, right=0.95, wspace=0.2)
+                    left=0.1, right=0.95, wspace=0.3)
 
 # left plot: data and decision boundary
 ax = fig.add_subplot(121)

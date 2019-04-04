@@ -92,7 +92,7 @@ Z = Z[:, 1].reshape(xx.shape)
 # plot the results
 fig = plt.figure(figsize=(5, 2.5))
 fig.subplots_adjust(bottom=0.15, top=0.95, hspace=0.0,
-                    left=0.1, right=0.95, wspace=0.2)
+                    left=0.1, right=0.95, wspace=0.3)
 
 # left plot: data and decision boundary
 ax = fig.add_subplot(121)

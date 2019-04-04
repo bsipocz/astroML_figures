@@ -70,7 +70,7 @@ h_smooth = np.dot(F, hN) / np.sum(F, 1)
 #------------------------------------------------------------
 # Plot the results
 fig = plt.figure(figsize=(5, 2.2))
-fig.subplots_adjust(left=0.1, right=0.95, wspace=0.25,
+fig.subplots_adjust(left=0.1, right=0.95, wspace=0.35,
                     bottom=0.15, top=0.9)
 
 # First plot: the equivalent Kernel to the WF

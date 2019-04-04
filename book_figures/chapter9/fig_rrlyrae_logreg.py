@@ -19,7 +19,6 @@ from __future__ import print_function
 
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib import colors
 
 from sklearn.linear_model import LogisticRegression
 from astroML.datasets import fetch_rrlyrae_combined
@@ -87,7 +86,7 @@ Z = Z.reshape(xx.shape)
 # plot the results
 fig = plt.figure(figsize=(5, 2.5))
 fig.subplots_adjust(bottom=0.15, top=0.95, hspace=0.0,
-                    left=0.1, right=0.95, wspace=0.2)
+                    left=0.1, right=0.95, wspace=0.3)
 
 # left plot: data and decision boundary
 ax = fig.add_subplot(121)
