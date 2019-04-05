@@ -110,7 +110,7 @@ for i, f in enumerate(factors):
     # second column: plot the phased data & fit
     ax2 = fig.add_subplot(222 + 2 * i)
     ax2.errorbar(phase_best, y, dy, fmt='.k', ms=4, ecolor='gray', lw=1,
-                 capsize=1.5)
+                 capsize=1.5, alpha=0.4)
     ax2.plot(best_fit[(f, 1)][0], best_fit[(f, 1)][1], '-', c='gray')
     ax2.plot(best_fit[(f, 6)][0], best_fit[(f, 6)][1], '-', c='black')
 
