@@ -96,7 +96,7 @@ ax.set_xlabel('depth of tree')
 ax.set_ylabel('rms error')
 
 ax.set_xlim(0, 21)
-ax.set_ylim(0.009,  0.04)
+ax.set_ylim(0.009, 0.04)
 ax.yaxis.set_major_locator(plt.MultipleLocator(0.01))
 
 # right panel: plot best fit
@@ -104,12 +104,12 @@ ax = fig.add_subplot(122)
 
 edges = np.linspace(z_test.min(), z_test.max(), 101)
 H, zs_bins, zp_bins = np.histogram2d(z_test, z_fit_best, bins=edges)
-ax.imshow(H.T, origin='lower', interpolation='nearest', aspect='auto', 
-           extent=[zs_bins[0], zs_bins[-1], zs_bins[0], zs_bins[-1]],
-           cmap=plt.cm.binary)
+ax.imshow(H.T, origin='lower', interpolation='nearest', aspect='auto',
+          extent=[zs_bins[0], zs_bins[-1], zs_bins[0], zs_bins[-1]],
+          cmap=plt.cm.binary)
 
 ax.plot([-0.1, 0.4], [-0.1, 0.4], ':k')
-ax.text(0.03, 0.97, "depth = %i\nrms = %.3f" % (best_depth, rms_test[i_best]),
+ax.text(0.03, 0.92, "depth = %i\nrms = %.3f" % (best_depth, rms_test[i_best]),
         ha='left', va='top', transform=ax.transAxes)
 
 ax.set_xlabel(r'$z_{\rm true}$')
