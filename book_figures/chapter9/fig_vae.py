@@ -84,14 +84,14 @@ for i, y3 in enumerate(seq3):
     draw_circle(ax, (x3, y3), radius * 0.75)
 
 ax.add_patch(plt.Rectangle((x3 - radius, seq3[1] - radius), radius * 2,
-                           seq3[0] - seq3[1] + 2 * radius, fc='b', alpha=0.5))
+                           seq3[0] - seq3[1] + 2 * radius, fc='b', alpha=0.25))
 ax.text(x3, (seq3[0] + seq3[1]) / 2, r'$\sigma$', fontsize=12,
-        ha='center', va='center')
+        ha='center', va='center', alpha=0.6)
 
 ax.add_patch(plt.Rectangle((x3 - radius, seq3[3] - radius), radius * 2,
-                           seq3[2] - seq3[3] + 2 * radius, fc='y', alpha=0.5))
+                           seq3[2] - seq3[3] + 2 * radius, fc='y', alpha=0.25))
 ax.text(x3, (seq3[2] + seq3[3]) / 2, r'$\mu$', fontsize=12,
-        ha='center', va='center')
+        ha='center', va='center', alpha=0.6)
 
 draw_connecting_arrow(ax, (x3 + radius, (seq3[0] + seq3[1]) / 2), radius * 0.15,
                       (x4 - radius, seq4[1]), radius * 0.2)
@@ -102,10 +102,10 @@ for i, y4 in enumerate(seq4):
     draw_circle(ax, (x4, y4), radius * 0.75, alpha=0.5)
 
 ax.text(x4, seq4[1], 'Sample', fontsize=12, ha='center',
-        va='center', rotation=90)
+        va='center', rotation=90, alpha=0.6)
 
 ax.add_patch(plt.Rectangle((x4 - radius, seq4[2] - radius), radius * 2,
-                           seq4[0] - seq4[2] + 2 * radius, fc='g', alpha=0.5))
+                           seq4[0] - seq4[2] + 2 * radius, fc='g', alpha=0.3))
 
 for i, y5 in enumerate(seq5):
     draw_circle(ax, (x5, y5), radius)
