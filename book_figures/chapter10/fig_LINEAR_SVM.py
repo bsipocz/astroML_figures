@@ -55,7 +55,7 @@ matplotlib.rcParams['image.cmap'] = 'cl'
 data = fetch_LINEAR_geneva()
 
 attributes = [('gi', 'logP'),
-              ('gi', 'logP', 'ug', 'iK', 'JK', 'amp', 'skew')]
+              ('gi', 'logP', 'ug', 'iK', 'JK', 'Ampl', 'skew')]
 labels = ['$u-g$', '$g-i$', '$i-K$', '$J-K$',
           r'$\log(P)$', 'amplitude', 'skew']
 cls = 'LCtype'
@@ -116,7 +116,7 @@ class_labels = []
 for i in range(2):
     Xtest = X[i][i_test]
     ytest = y[i][i_test]
-    amp = data['amp'][i_test]
+    amp = data['Ampl'][i_test]
 
     # Plot the resulting classifications
     ax1 = fig.add_subplot(221 + 2 * i)
